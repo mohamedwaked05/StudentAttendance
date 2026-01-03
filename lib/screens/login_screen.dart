@@ -13,16 +13,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isTestingConnection = false;
-  String _connectionStatus = '';
   
   @override
   void initState() {
     super.initState();
-    // Pre-fill for testing
     _emailController.text = 'teacher@uni.edu';
     _passwordController.text = '123456';
-    _testBackendConnection();
   }
   
   @override
@@ -32,28 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
   
-  Future<void> _testBackendConnection() async {
-    setState(() => _isTestingConnection = true);
-    
-    final isConnected = await ApiService.testConnection();
-    
-    setState(() {
-      _isTestingConnection = false;
-      _connectionStatus = isConnected 
-          ? '✅ Backend connected!' 
-          : '❌ Cannot connect to backend. Check:\n• XAMPP is running\n• Correct IP in api_service.dart';
-    });
-  }
-  
   Future<void> _login() async {
-    // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       _showError('Please enter email and password');
-      return;
-    }
-    
-    if (!_emailController.text.contains('@')) {
-      _showError('Please enter a valid email');
       return;
     }
     
@@ -67,16 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
     
     if (response['success'] == true) {
-      // Save user data
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user', json.encode(response['user']));
       await prefs.setBool('isLoggedIn', true);
       await prefs.setInt('userId', response['user']['id']);
       
-      // Show success
       _showSuccess('Welcome ${response['user']['name']}!');
-      
-      // Navigate based on role
       _navigateBasedOnRole(response['user']['role']);
     } else {
       _showError(response['message'] ?? 'Login failed');
@@ -119,35 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
   
-  void _showConnectionHelp() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Connection Help'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('To fix connection issues:'),
-            SizedBox(height: 10),
-            Text('1. Open CMD and run: ipconfig'),
-            Text('2. Find your "IPv4 Address"'),
-            Text('3. Update lib/services/api_service.dart'),
-            Text('4. Change baseUrl to:'),
-            Text('   "http://YOUR_IP/attendance-system/api"'),
-            SizedBox(height: 10),
-            Text('For Android Emulator use:'),
-            Text('   "http://10.0.2.2/attendance-system/api"'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void _copyCredentials(String email, String password) {
+    _emailController.text = email;
+    _passwordController.text = password;
+    _showSuccess('Credentials copied!');
   }
   
   @override
@@ -214,48 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   SizedBox(height: 32),
                   
-                  // Connection Status
-                  if (_connectionStatus.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      margin: EdgeInsets.only(bottom: 16),
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _connectionStatus.contains('✅') 
-                            ? Colors.green.shade50 
-                            : Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _connectionStatus.contains('✅')
-                              ? Colors.green.shade100
-                              : Colors.orange.shade100,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionStatus.contains('✅') 
-                                ? Icons.check_circle 
-                                : Icons.warning,
-                            color: _connectionStatus.contains('✅')
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _connectionStatus,
-                              style: TextStyle(
-                                color: _connectionStatus.contains('✅')
-                                    ? Colors.green.shade800
-                                    : Colors.orange.shade800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  
                   // Login Card
                   Card(
                     elevation: 8,
@@ -321,36 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                           ),
-                          
-                          SizedBox(height: 16),
-                          
-                          // Test Connection Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: _testBackendConnection,
-                              style: OutlinedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                side: BorderSide(color: Colors.blue),
-                              ),
-                              child: _isTestingConnection
-                                  ? Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        ),
-                                        SizedBox(width: 10),
-                                        Text('Testing Connection...'),
-                                      ],
-                                    )
-                                  : Text('Test Backend Connection'),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -382,22 +258,43 @@ class _LoginScreenState extends State<LoginScreen> {
                           
                           SizedBox(height: 12),
                           
-                          _buildDemoAccountRow('👨‍🏫 Teacher', 'teacher@uni.edu', '123456'),
-                          _buildDemoAccountRow('👨‍🎓 Student', 'student1@uni.edu', '123456'),
-                          _buildDemoAccountRow('👨‍💼 Admin', 'admin@uni.edu', '123456'),
+                          // Teacher
+                          ListTile(
+                            leading: Icon(Icons.person, color: Colors.blue),
+                            title: Text('Teacher'),
+                            subtitle: Text('teacher@uni.edu / 123456'),
+                            trailing: IconButton(
+                              icon: Icon(Icons.content_copy, size: 18),
+                              onPressed: () => _copyCredentials('teacher@uni.edu', '123456'),
+                            ),
+                            dense: true,
+                          ),
+                          
+                          // Student
+                          ListTile(
+                            leading: Icon(Icons.school, color: Colors.green),
+                            title: Text('Student'),
+                            subtitle: Text('student1@uni.edu / 123456'),
+                            trailing: IconButton(
+                              icon: Icon(Icons.content_copy, size: 18),
+                              onPressed: () => _copyCredentials('student1@uni.edu', '123456'),
+                            ),
+                            dense: true,
+                          ),
+                          
+                          // Admin
+                          ListTile(
+                            leading: Icon(Icons.admin_panel_settings, color: Colors.red),
+                            title: Text('Admin'),
+                            subtitle: Text('admin@uni.edu / 123456'),
+                            trailing: IconButton(
+                              icon: Icon(Icons.content_copy, size: 18),
+                              onPressed: () => _copyCredentials('admin@uni.edu', '123456'),
+                            ),
+                            dense: true,
+                          ),
                         ],
                       ),
-                    ),
-                  ),
-                  
-                  SizedBox(height: 16),
-                  
-                  // Help Button
-                  TextButton(
-                    onPressed: _showConnectionHelp,
-                    child: Text(
-                      'Need help with connection?',
-                      style: TextStyle(color: Colors.blue.shade700),
                     ),
                   ),
                 ],
@@ -405,49 +302,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-  
-  Widget _buildDemoAccountRow(String role, String email, String password) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: EdgeInsets.only(top: 4),
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade400,
-              shape: BoxShape.circle,
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  role,
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text('Email: $email'),
-                Text('Password: $password'),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.content_copy, size: 18),
-            onPressed: () {
-              _emailController.text = email;
-              _passwordController.text = password;
-              _showSuccess('Credentials copied!');
-            },
-            tooltip: 'Copy to form',
-          ),
-        ],
       ),
     );
   }
