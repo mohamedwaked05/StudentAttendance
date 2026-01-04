@@ -23,13 +23,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     _studentIdController.text = 'S00${DateTime.now().millisecondsSinceEpoch % 100}';
   }
   
-  Future<void> _addUser() async {
+ Future<void> _addUser() async {
   if (!_formKey.currentState!.validate()) return;
   
   setState(() {
     _isSubmitting = true;
     _message = '';
   });
+  
+  print('🆕 Creating new user...');
+  print('   Name: ${_nameController.text}');
+  print('   Email: ${_emailController.text}');
+  print('   Role: $_selectedRole');
+  print('   Student ID: ${_studentIdController.text}');
   
   final response = await ApiService.addUser(
     name: _nameController.text,
@@ -39,6 +45,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     studentId: _selectedRole == 'student' ? _studentIdController.text : null,
   );
   
+  print('📊 Add User API Response:');
+  print('   Success: ${response['success']}');
+  print('   Message: ${response['message']}');
+  print('   User ID: ${response['user_id']}');
+  
   setState(() {
     _isSubmitting = false;
     _isSuccess = response['success'] == true;
@@ -46,6 +57,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   });
   
   if (response['success'] == true) {
+    // IMPORTANT: Tell user to add this ID to the teacher's list
+    if (_selectedRole == 'student') {
+      _message += '\n\nIMPORTANT: Add student ID ${response['user_id']} to teacher\'s student list in teacher_home.dart';
+      _isSuccess = true;
+    }
     _clearForm();
   }
 }

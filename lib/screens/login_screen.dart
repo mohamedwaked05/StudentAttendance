@@ -40,7 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text,
       _passwordController.text,
     );
-    
+    print('🔑 DEBUG - Login Response:');
+print('   User ID: ${response['user']['id']}');
+print('   User Name: ${response['user']['name']}');
+print('   User Email: ${response['user']['email']}');
+print('   User Role: ${response['user']['role']}');
+print('   Student ID in response: ${response['user']['student_id']}');
     setState(() => _isLoading = false);
     
     if (response['success'] == true) {
@@ -235,68 +240,68 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 24),
                   
                   // Demo Accounts
-                  Card(
-                    color: Colors.grey.shade50,
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.account_circle, color: Colors.blue),
-                              SizedBox(width: 8),
-                              Text(
-                                'Demo Accounts',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
+                  // Card(
+                  //   color: Colors.grey.shade50,
+                  //   child: Padding(
+                  //     padding: EdgeInsets.all(16),
+                  //     child: Column(
+                  //       crossAxisAlignment: CrossAxisAlignment.start,
+                  //       children: [
+                  //         Row(
+                  //           children: [
+                  //             Icon(Icons.account_circle, color: Colors.blue),
+                  //             SizedBox(width: 8),
+                  //             Text(
+                  //               'Demo Accounts',
+                  //               style: TextStyle(
+                  //                 fontWeight: FontWeight.bold,
+                  //                 fontSize: 16,
+                  //               ),
+                  //             ),
+                  //           ],
+                  //         ),
                           
-                          SizedBox(height: 12),
+                  //         SizedBox(height: 12),
                           
-                          // Teacher
-                          ListTile(
-                            leading: Icon(Icons.person, color: Colors.blue),
-                            title: Text('Teacher'),
-                            subtitle: Text('teacher@uni.edu / 123456'),
-                            trailing: IconButton(
-                              icon: Icon(Icons.content_copy, size: 18),
-                              onPressed: () => _copyCredentials('teacher@uni.edu', '123456'),
-                            ),
-                            dense: true,
-                          ),
+                  //         // Teacher
+                  //         ListTile(
+                  //           leading: Icon(Icons.person, color: Colors.blue),
+                  //           title: Text('Teacher'),
+                  //           subtitle: Text('teacher@uni.edu / 123456'),
+                  //           trailing: IconButton(
+                  //             icon: Icon(Icons.content_copy, size: 18),
+                  //             onPressed: () => _copyCredentials('teacher@uni.edu', '123456'),
+                  //           ),
+                  //           dense: true,
+                  //         ),
                           
-                          // Student
-                          ListTile(
-                            leading: Icon(Icons.school, color: Colors.green),
-                            title: Text('Student'),
-                            subtitle: Text('student1@uni.edu / 123456'),
-                            trailing: IconButton(
-                              icon: Icon(Icons.content_copy, size: 18),
-                              onPressed: () => _copyCredentials('student1@uni.edu', '123456'),
-                            ),
-                            dense: true,
-                          ),
+                  //         // Student
+                  //         ListTile(
+                  //           leading: Icon(Icons.school, color: Colors.green),
+                  //           title: Text('Student'),
+                  //           subtitle: Text('student1@uni.edu / 123456'),
+                  //           trailing: IconButton(
+                  //             icon: Icon(Icons.content_copy, size: 18),
+                  //             onPressed: () => _copyCredentials('student1@uni.edu', '123456'),
+                  //           ),
+                  //           dense: true,
+                  //         ),
                           
-                          // Admin
-                          ListTile(
-                            leading: Icon(Icons.admin_panel_settings, color: Colors.red),
-                            title: Text('Admin'),
-                            subtitle: Text('admin@uni.edu / 123456'),
-                            trailing: IconButton(
-                              icon: Icon(Icons.content_copy, size: 18),
-                              onPressed: () => _copyCredentials('admin@uni.edu', '123456'),
-                            ),
-                            dense: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  //         // Admin
+                  //         ListTile(
+                  //           leading: Icon(Icons.admin_panel_settings, color: Colors.red),
+                  //           title: Text('Admin'),
+                  //           subtitle: Text('admin@uni.edu / 123456'),
+                  //           trailing: IconButton(
+                  //             icon: Icon(Icons.content_copy, size: 18),
+                  //             onPressed: () => _copyCredentials('admin@uni.edu', '123456'),
+                  //           ),
+                  //           dense: true,
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

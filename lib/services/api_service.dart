@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = "http://localhost/attendance-system/api";
+  static const String baseUrl = "http://127.0.0.1/attendance-system/api";
   
   // LOGIN
   static Future<Map<String, dynamic>> login(String email, String password) async {
@@ -52,50 +52,88 @@ class ApiService {
     }
   }
   
-  // GET STUDENT ATTENDANCE
-  static Future<List<dynamic>> getStudentAttendance(int studentId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/attendance/view.php?student_id=$studentId'),
-      );
-      
-      if (response.statusCode == 200) {
+// GET STUDENT ATTENDANCE
+static Future<List<dynamic>> getStudentAttendance(int studentId) async {
+  print('🌐 [API] Fetching attendance for student $studentId');
+  
+  try {
+    // IMPORTANT: For Flutter web, use 127.0.0.1 instead of localhost
+    final url = Uri.parse('http://127.0.0.1/attendance-system/api/attendance/view.php?student_id=$studentId');
+    print('📡 URL: $url');
+    
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+    
+    print('📊 Response Status: ${response.statusCode}');
+    print('📄 Response Body (first 500 chars): ${response.body.length > 500 ? response.body.substring(0, 500) + "..." : response.body}');
+    
+    if (response.statusCode == 200) {
+      try {
         final data = json.decode(response.body);
+        print('✅ JSON Parsed - success: ${data['success']}');
+        
         if (data['success'] == true) {
-          return data['attendance'] ?? [];
+          final attendance = data['attendance'] ?? [];
+          print('📈 Found ${attendance.length} attendance records');
+          return attendance;
+        } else {
+          print('❌ API error: ${data['message']}');
+          return [];
         }
+      } catch (e) {
+        print('❌ JSON Parse Error: $e');
+        return [];
       }
-      return [];
-    } catch (e) {
+    } else {
+      print('❌ HTTP Error ${response.statusCode}');
       return [];
     }
+  } catch (e) {
+    print('❌ Network Exception: $e');
+    return [];
   }
+} 
   
   // MARK ATTENDANCE
-  static Future<Map<String, dynamic>> markAttendance({
-    required int studentId,
-    required int classId,
-    required String status,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/attendance/mark.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'student_id': studentId,
-          'class_id': classId,
-          'status': status,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-      return {'success': false, 'message': 'Server error'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error'};
+static Future<Map<String, dynamic>> markAttendance({
+  required int studentId,
+  required int classId,
+  required String status,
+}) async {
+  print('🎯 MARK ATTENDANCE API CALL:');
+  print('   Student ID: $studentId');
+  print('   Class ID: $classId');
+  print('   Status: $status');
+  
+  try {
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1/attendance-system/api/attendance/mark.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'student_id': studentId,
+        'class_id': classId,
+        'status': status,
+      }),
+    );
+    
+    print('📊 Mark Attendance Response:');
+    print('   Status Code: ${response.statusCode}');
+    print('   Body: ${response.body}');
+    
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
     }
+    return {'success': false, 'message': 'Server error ${response.statusCode}'};
+  } catch (e) {
+    print('❌ Mark Attendance Error: $e');
+    return {'success': false, 'message': 'Network error: $e'};
   }
+}
   
   // ADD USER (ADMIN)
   static Future<Map<String, dynamic>> addUser({

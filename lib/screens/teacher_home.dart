@@ -68,33 +68,46 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       ),
     );
   }
+  Future<List<int>> _getEnrolledStudents(int classId) async {
+  try {
+    // In real app, call API to get enrolled students
+    // For now, return dummy IDs that exist in database
+    return [3, 4, 5, 6, 7]; // These should match your database user IDs
+  } catch (e) {
+    print('Error getting enrolled students: $e');
+    return [];
+  }
+}
   
 Future<void> _markAllPresent(int classId, String className) async {
   try {
-    // In real app, get enrolled students first
-    // For now, mark dummy students
+    // TEST WITH JUST THE NEW STUDENT
+    final newStudentId = 8; // Replace with your new student ID
+    
+    print('🧪 TEST: Marking attendance for NEW student $newStudentId only');
+    
     final result = await ApiService.markAttendance(
-      studentId: 3, // Real student ID from database
+      studentId: newStudentId,
       classId: classId,
       status: 'present',
     );
     
-    if (result['success'] == true) {
+    print('📊 Test Result: ${result['success']} - ${result['message']}');
+    
+    if (result['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Attendance marked successfully!')),
+        SnackBar(content: Text('✅ Test: New student marked present!')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${result['message']}')),
+        SnackBar(content: Text('❌ Test failed: ${result['message']}')),
       );
     }
+    
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $e')),
-    );
+    print('❌ Error: $e');
   }
 }
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

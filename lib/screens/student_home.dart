@@ -21,26 +21,78 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
   
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString('user');
-    if (userString != null) {
+  final prefs = await SharedPreferences.getInstance();
+  final userString = prefs.getString('user');
+  
+  print('🔄 Loading user data from storage...');
+  print('📦 Raw user string: $userString');
+  
+  if (userString != null) {
+    try {
+      final userData = json.decode(userString);
+      print('✅ Successfully parsed user data:');
+      print('   ID: ${userData['id']}');
+      print('   Name: ${userData['name']}');
+      print('   Email: ${userData['email']}');
+      print('   Role: ${userData['role']}');
+      print('   Student ID field: ${userData['student_id']}');
+      
       setState(() {
-        _user = json.decode(userString);
+        _user = userData;
       });
+    } catch (e) {
+      print('❌ Error parsing user data: $e');
+    }
+  } else {
+    print('❌ No user data found in storage!');
+  }
+}
+  
+ Future<void> _loadAttendance() async {
+  final prefs = await SharedPreferences.getInstance();
+  final userString = prefs.getString('user');
+  
+  // Parse the user data from SharedPreferences
+  Map<String, dynamic>? storedUser;
+  if (userString != null) {
+    try {
+      storedUser = json.decode(userString);
+    } catch (e) {
+      print('❌ Error parsing user data: $e');
     }
   }
   
-  Future<void> _loadAttendance() async {
-    final studentId = _user?['id'] ?? 3; // Default to student ID 3
-    
-    final attendance = await ApiService.getStudentAttendance(studentId);
-    
-    setState(() {
-      _attendance = attendance;
-      _isLoading = false;
-    });
+  print('🔍 DEBUG - Student Home:');
+  print('📊 User data from storage: $userString');
+  print('👤 Parsed user object: $storedUser');
+  
+  // Get student ID from parsed user object
+  final studentId = storedUser?['id'] ?? 0;
+  print('🎯 Using student ID: $studentId');
+  
+  if (studentId == 0) {
+    print('❌ ERROR: No valid student ID found!');
+    print('   User object keys: ${storedUser?.keys}');
+    setState(() => _isLoading = false);
+    return;
   }
   
+  print('📡 Fetching attendance for student ID: $studentId');
+  
+  final attendance = await ApiService.getStudentAttendance(studentId);
+  
+  print('✅ Got ${attendance.length} attendance records');
+  if (attendance.isNotEmpty) {
+    print('📄 Sample record: ${attendance.first}');
+  } else {
+    print('📭 No attendance records found');
+  }
+  
+  setState(() {
+    _attendance = attendance;
+    _isLoading = false;
+  });
+}
   Future<void> _logout() async {
     await ApiService.logout();
     Navigator.pushReplacementNamed(context, '/');
