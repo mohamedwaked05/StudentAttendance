@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import 'class_attendance_screen.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   @override
@@ -31,7 +32,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   }
   
   Future<void> _loadClasses() async {
-    final teacherId = _user?['id'] ?? 2; // Default to teacher ID 2
+    final teacherId = _user?['id'] ?? 2;
     
     final classes = await ApiService.getTeacherClasses(teacherId);
     
@@ -50,64 +51,99 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Mark Attendance'),
-        content: Text('Mark attendance for $className?'),
+        title: Text('Attendance Options for $className'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Choose how you want to manage attendance:'),
+            SizedBox(height: 20),
+            ListTile(
+              leading: Icon(Icons.flash_on, color: Colors.green),
+              title: Text('Quick Mark All Present'),
+              subtitle: Text('Instantly mark all students as present'),
+              onTap: () {
+                Navigator.pop(context);
+                _quickMarkAllPresent(classId, className);
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.list, color: Colors.blue),
+              title: Text('View & Manage Attendance'),
+              subtitle: Text('See all students and mark individually'),
+              onTap: () {
+                Navigator.pop(context);
+                _goToClassDetails(classId, className);
+              },
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _markAllPresent(classId, className);
-            },
-            child: Text('Mark All Present'),
-          ),
         ],
       ),
     );
   }
-  Future<List<int>> _getEnrolledStudents(int classId) async {
-  try {
-    // In real app, call API to get enrolled students
-    // For now, return dummy IDs that exist in database
-    return [3, 4, 5, 6, 7]; // These should match your database user IDs
-  } catch (e) {
-    print('Error getting enrolled students: $e');
-    return [];
-  }
-}
   
-Future<void> _markAllPresent(int classId, String className) async {
-  try {
-    // TEST WITH JUST THE NEW STUDENT
-    final newStudentId = 8; // Replace with your new student ID
-    
-    print('🧪 TEST: Marking attendance for NEW student $newStudentId only');
-    
-    final result = await ApiService.markAttendance(
-      studentId: newStudentId,
-      classId: classId,
-      status: 'present',
-    );
-    
-    print('📊 Test Result: ${result['success']} - ${result['message']}');
-    
-    if (result['success']) {
+  Future<void> _quickMarkAllPresent(int classId, String className) async {
+    try {
+      final studentIds = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+      
+      print('🚀 Quick marking ${studentIds.length} students in $className');
+      
+      int successCount = 0;
+      
+      for (int studentId in studentIds) {
+        final result = await ApiService.markAttendance(
+          studentId: studentId,
+          classId: classId,
+          status: 'present',
+        );
+        
+        if (result['success']) {
+          successCount++;
+          print('✅ Student $studentId: Marked present');
+        } else {
+          print('❌ Student $studentId failed: ${result['message']}');
+        }
+        
+        await Future.delayed(Duration(milliseconds: 50));
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Test: New student marked present!')),
+        SnackBar(
+          content: Text('✅ Marked $successCount students as present in $className'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
       );
-    } else {
+      
+    } catch (e) {
+      print('❌ Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Test failed: ${result['message']}')),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
-    
-  } catch (e) {
-    print('❌ Error: $e');
   }
-}
+
+  void _goToClassDetails(int classId, String className) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ClassAttendanceScreen(
+          classId: classId,
+          className: className,
+        ),
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -206,9 +242,17 @@ Future<void> _markAllPresent(int classId, String className) async {
                             Text('Time: ${cls['schedule_time']?.toString().substring(0, 5) ?? 'N/A'}'),
                           ],
                         ),
-                        trailing: ElevatedButton(
-                          onPressed: () => _markAttendance(cls['id'], cls['class_name']),
-                          child: Text('Mark Attendance'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => _markAttendance(cls['id'], cls['class_name']),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
+                              child: Text('Take Attendance'),
+                            ),
+                          ],
                         ),
                       ),
                     );

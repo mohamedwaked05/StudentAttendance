@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
         '/teacher': (context) => TeacherHomeScreen(),
         '/student': (context) => StudentHomeScreen(),
         '/admin': (context) => AdminHomeScreen(),
+        // No need to add class-attendance route since we're using MaterialPageRoute
       },
       debugShowCheckedModeBanner: false,
     );

@@ -32,6 +32,24 @@ class ApiService {
       };
     }
   }
+  // GET CLASS ATTENDANCE
+static Future<Map<String, dynamic>> getClassAttendance(int classId, {String? date}) async {
+  try {
+    final dateParam = date ?? DateTime.now().toIso8601String().split('T')[0];
+    final url = Uri.parse('$baseUrl/attendance/class_view.php?class_id=$classId&date=$dateParam');
+    
+    print('🌐 [API] Fetching class attendance for class $classId on $dateParam');
+    
+    final response = await http.get(url);
+    
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    return {"success": false, "message": "Server error"};
+  } catch (e) {
+    return {"success": false, "message": "Network error: $e"};
+  }
+}
   
   // GET TEACHER CLASSES
   static Future<List<dynamic>> getTeacherClasses(int teacherId) async {
